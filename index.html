@@ -7,64 +7,59 @@
   <meta name="description" content="Upload Excel/CSV and get instant interactive visuals. Export to PPT/PDF." />
   <link rel="icon" href="data:," />
   <style>
-    :root {
-      --radius: 14px; --space-7: 40px; --space-5: 24px;
-      --accent:#0A84FF; --bg:#FBFBFD; --card:#fff; --text:#0b0b0f; --muted:#5c5c66; --line:#e6e6eb; --focus:#0A84FF;
-    }
+    :root { --accent:#0A84FF; --bg:#FBFBFD; --card:#fff; --text:#0b0b0f; --muted:#5c5c66; --line:#e6e6eb; }
     @media (prefers-color-scheme: dark){ :root{ --bg:#0B0B10; --card:#141418; --text:#F5F6F7; --muted:#C5C7CE; --line:#2A2A31; } }
     html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
       font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,Helvetica,Arial}
-    .container{max-width:1200px;margin:0 auto;padding:var(--space-7) var(--space-5);}
+    .container{max-width:1200px;margin:0 auto;padding:40px 24px;}
     .brand{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:40px}
     .brand .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#5bc0ff)}
-    .brand h1{margin:0;font-weight:700;letter-spacing:-.02em}
     .upload-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:40px;text-align:center}
     .dropzone{border:2px dashed var(--line);border-radius:14px;padding:40px}
     .muted{color:var(--muted)}
-    .error-overlay{position:fixed;inset:0;background:#111;color:#fff;padding:24px;z-index:9999;font-family:ui-monospace,Menlo,Consolas,monospace}
+    .banner{background:#fff3cd;color:#664d03;border:1px solid #ffecb5;border-radius:10px;padding:10px 14px;margin:0 auto 16px;max-width:900px}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--card)}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:24px;margin-top:24px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px}
+    .btn{display:inline-flex;align-items:center;gap:10px;padding:12px 18px;border-radius:12px;border:1px solid var(--line);background:var(--card);cursor:pointer}
+    .btn.primary{background:var(--text);color:var(--bg);border:none}
+    .error-overlay{position:fixed;inset:0;background:#111;color:#fff;padding:24px;z-index:9999;font-family:ui-monospace,Menlo,Consolas,monospace;display:none}
     .error-overlay a{color:#7cc4ff}
   </style>
-  <noscript>
-    <div class="error-overlay">
-      <h2>JavaScript is disabled.</h2>
-      <p>This app needs JavaScript to run. Please enable it and reload.</p>
-    </div>
-  </noscript>
   <script>
-    // Early boot diagnostics
-    window.__bootLog = [];
-    function bootLog(msg){ try { window.__bootLog.push(msg); } catch(e){} }
-    bootLog("Boot: start");
-    window.addEventListener('error', function(e){
-      const box = document.createElement('div');
-      box.className = 'error-overlay';
-      box.innerHTML = '<h2>Something went wrong loading the app</h2>' +
-        '<p><strong>' + e.message + '</strong></p>' +
-        '<p>Open the browser console for details. If you are offline, CDNs may be blocked.</p>' +
-        '<p>Boot log:<br><code>' + (window.__bootLog||[]).join('<br>') + '</code></p>';
-      document.body.appendChild(box);
-    });
+    // Resilient loader for PptxGenJS (tries jsDelivr then unpkg)
+    window.ensurePptx = function(cb){
+      function done(){ cb && cb(!!window.PptxGenJS); }
+      if (window.PptxGenJS) return done();
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.min.js';
+      s.onload = done;
+      s.onerror = function(){
+        var s2 = document.createElement('script');
+        s2.src = 'https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.min.js';
+        s2.onload = done;
+        s2.onerror = done;
+        document.head.appendChild(s2);
+      };
+      document.head.appendChild(s);
+    };
   </script>
 </head>
 <body>
-  <div id="root"><!-- React will mount --></div>
+  <div id="root"></div>
 
-  <!-- Pinned CDNs (jsDelivr) -->
+  <!-- Pinned CDNs -->
   <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js" crossorigin></script>
   <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin></script>
-  <script>bootLog("CDN: React loaded: " + !!window.React + ", ReactDOM loaded: " + !!window.ReactDOM);</script>
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script>bootLog("CDN: XLSX loaded: " + !!window.XLSX);</script>
 
   <script src="https://cdn.jsdelivr.net/npm/vega@5.25.0/build/vega.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.16.3/build/vega-lite.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.24.0/build/vega-embed.min.js"></script>
-  <script>bootLog("CDN: vega/vega-lite/vega-embed loaded: " + (!!window.vega) + "/" + (!!window.vl) + "/" + (!!window.vegaEmbed));</script>
 
-  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.min.js"></script>
-  <script>bootLog("CDN: PptxGenJS loaded: " + !!window.PptxGenJS);</script>
-
-  <script src="./app.js" defer></script>
+  <!-- app (does not hard-fail if PPTX is missing) -->
+  <script src="./app.js"></script>
 </body>
 </html>
