@@ -1,0 +1,38 @@
+/* Extra CSS tokens and utilities separated for clarity (extend as needed) */
+:root {
+  --font-xs: 12px;
+  --font-sm: 13px;
+  --font-md: 15px;
+  --font-lg: 18px;
+  --font-xl: 24px;
+}
+kbd {
+  background: rgba(0,0,0,0.08);
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,0,0,0.12);
+  font-size: 12px;
+}
+.select, select {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  box-shadow: var(--shadow-1);
+}
+input[type="file"] {
+  display: none;
+}
+label.file-label {
+  display: inline-flex; align-items:center; gap:10px;
+  padding: 12px 18px; border-radius: 12px;
+  background: var(--text); color: var(--bg); cursor: pointer;
+  box-shadow: var(--shadow-1);
+}
+.summary-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+.summary-table th, .summary-table td {
+  padding: 8px 10px; border-bottom: 1px solid var(--line);
+}
